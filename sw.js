@@ -8,8 +8,8 @@
      Kalau gagal (tidak ada sinyal), pakai salinan di cache.
    Naikkan VERSI setiap ada perubahan file aplikasi.
    ================================================================ */
-const VERSI = 'program-gym-v2';
-const FILE = ['./', 'index.html', 'style.css', 'app.js'];
+const VERSI = 'program-gym-v3';
+const FILE = ['./', 'index.html', 'style.css', 'gambar.js', 'app.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSI).then(c => c.addAll(FILE)).then(() => self.skipWaiting()));

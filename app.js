@@ -308,7 +308,10 @@ function programAwal() {
 
 /* ---------- Simpan dan muat data ---------- */
 function dataBaru() {
-  return { program: programAwal(), log: {}, berat: [], profil: { tinggi: null }, pengaturan: { istirahat: 90 } };
+  return {
+    program: programAwal(), log: {}, berat: [],
+    profil: { tinggi: null, umur: null, kelamin: '' }, pengaturan: { istirahat: 90 }
+  };
 }
 
 function muatData() {
@@ -984,23 +987,11 @@ function tampilDetailTanggal() {
 /* ================================================================
    DAFTAR GERAKAN
    ================================================================ */
-// Kata pencarian video contoh di YouTube (beberapa gerakan pakai kata khusus)
-const CARI_VIDEO = {
-  'push-up lutut': 'cara knee push up yang benar',
-  'jalan santai': 'cara jalan kaki olahraga yang benar',
-  'kardio treadmill / sepeda': 'cara incline walk treadmill untuk pemula',
-  'stretching': 'stretching setelah gym untuk pemula',
-  'chest press mesin': 'cara chest press machine yang benar'
-};
-function linkVideo(p) {
-  const kata = CARI_VIDEO[kunciNama(p.nama)] || ('cara ' + p.nama + ' yang benar');
-  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kata);
-}
-
+// Gambar gerak ada di gambar.js
 function htmlCara(p) {
-  return `<ol>${p.langkah.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` +
-    (p.tips ? `<p class="tips"><b>Tips:</b> ${esc(p.tips)}</p>` : '') +
-    `<a class="btn kecil penuh video" href="${esc(linkVideo(p))}" target="_blank" rel="noopener">Lihat video contoh (butuh internet)</a>`;
+  return gambarGerak(p.nama) +
+    `<ol>${p.langkah.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` +
+    (p.tips ? `<p class="tips"><b>Tips:</b> ${esc(p.tips)}</p>` : '');
 }
 
 function tampilGerakan() {
@@ -1033,6 +1024,9 @@ function beratUrut() {
 function tampilBadan() {
   const tglEl = document.getElementById('b-tanggal');
   if (!tglEl.value) tglEl.value = hariIni();
+  const umurEl = document.getElementById('b-umur');
+  if (document.activeElement !== umurEl) umurEl.value = data.profil.umur || '';
+  document.getElementById('b-kelamin').value = data.profil.kelamin || '';
   const daftar = beratUrut();
   const el = document.getElementById('isi-berat');
   if (!daftar.length) {
@@ -1097,7 +1091,17 @@ function tampilIdeal() {
   const atas = 25 * m * m;
   const daftar = beratUrut();
   const terakhir = daftar[daftar.length - 1];
-  let html = `<div class="angka"><span>Berat normal untuk tinggi ${tulisAngka(tinggi)} cm</span><b>${tulisAngka(bawah)} - ${tulisAngka(atas)} kg</b></div>`;
+  const { umur, kelamin } = data.profil;
+  // Rumus Broca: laki-laki (TB - 100) x 90%, perempuan (TB - 100) x 85%
+  const broca = kelamin && tinggi > 100 ? (tinggi - 100) * (kelamin === 'L' ? 0.9 : 0.85) : null;
+  let html = `
+    <div class="kartu-angka">
+      <div class="angka"><span>Berat normal (IMT) untuk ${tulisAngka(tinggi)} cm</span><b>${tulisAngka(bawah)} - ${tulisAngka(atas)} kg</b></div>
+      ${broca ? `<div class="angka"><span>Berat ideal (rumus Broca)</span><b>${tulisAngka(broca)} kg</b></div>` : ''}
+    </div>`;
+  if (umur && umur < 18) {
+    html += '<p class="info-kecil"><b>Umur di bawah 18 tahun:</b> patokan IMT dewasa kurang cocok. Tanya dokter atau ahli gizi.</p>';
+  }
   if (!terakhir) {
     html += '<p class="info-kecil">Catat berat badan di atas untuk melihat IMT (indeks massa tubuh) kamu.</p>';
   } else {
@@ -1115,6 +1119,15 @@ function tampilIdeal() {
       ${skalaImt(imt)}
       <p class="saran-berat">${saran}</p>
       <p class="info-kecil">Dihitung dari berat terakhir ${tulisAngka(terakhir.kg)} kg (${tanggalPendek(terakhir.tanggal)}).</p>`;
+    if (umur && kelamin) {
+      // Perkiraan lemak tubuh (rumus Deurenberg): 1,2 x IMT + 0,23 x umur - 10,8 x (laki-laki = 1) - 5,4
+      const lemak = 1.2 * imt + 0.23 * umur - 10.8 * (kelamin === 'L' ? 1 : 0) - 5.4;
+      html += `<div class="angka"><span>Perkiraan lemak tubuh</span><b>${tulisAngka(Math.max(0, lemak))}%</b>` +
+        '<small>Perkiraan kasar dari IMT, umur, dan jenis kelamin.</small></div>';
+    }
+  }
+  if (!umur || !kelamin) {
+    html += '<p class="info-kecil">Isi umur dan jenis kelamin di atas untuk melihat berat ideal rumus Broca dan perkiraan lemak tubuh.</p>';
   }
   html += '<p class="info-kecil">Patokan IMT dari Kemenkes RI. IMT tidak membedakan otot dan lemak.</p>';
   el.innerHTML = html;
@@ -1393,6 +1406,22 @@ function pasangTombol() {
     simpan();
     tampilBadan();
   });
+  // Umur dan jenis kelamin (langsung tersimpan)
+  const umurEl = document.getElementById('b-umur');
+  umurEl.addEventListener('input', () => {
+    const u = bacaAngka(umurEl.value);
+    if (u != null && u >= 10 && u <= 100) data.profil.umur = Math.round(u);
+    else if (umurEl.value.trim() === '') data.profil.umur = null;
+    else return;
+    simpan();
+    tampilIdeal();
+  });
+  document.getElementById('b-kelamin').addEventListener('change', e => {
+    data.profil.kelamin = e.target.value === 'L' || e.target.value === 'P' ? e.target.value : '';
+    simpan();
+    tampilIdeal();
+  });
+
   const tinggiEl = document.getElementById('i-tinggi');
   tinggiEl.addEventListener('input', () => {
     const t = bacaAngka(tinggiEl.value);

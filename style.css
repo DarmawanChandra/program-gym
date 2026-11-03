@@ -104,7 +104,22 @@ label.btn, a.btn { display: inline-flex; align-items: center; justify-content: c
 a.btn.kecil { font-size: .9rem; }
 /* Kotak pilih file tetap ada tapi tidak terlihat (dibuka lewat tombol label) */
 .tak-terlihat { position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; margin: 0; border: 0; opacity: 0; overflow: hidden; pointer-events: none; }
-.btn.video { margin-top: 10px; color: var(--biru); border-color: var(--biru); font-weight: 600; }
+/* ===== Gambar gerak (orang lidi) ===== */
+.gambar-gerak { margin: 0 0 12px; text-align: center; }
+.gg { display: block; width: 100%; max-width: 280px; height: auto; margin: 0 auto; background: var(--latar); border-radius: 12px; cursor: pointer; }
+.gg polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gg-badan { stroke: var(--biru-tua); stroke-width: 3.2; }
+.gg-belakang { stroke: #9fb0d0; stroke-width: 3.2; }
+.gg-kepala { fill: var(--biru-tua); }
+.gg-lantai { stroke: #c9d2e0; stroke-width: 1.5; }
+.gg-benda { fill: #c9d2e0; }
+.gg-tiang { stroke: #b7c2d4; stroke-width: 2; stroke-linecap: round; }
+.gg-sandaran { stroke: #b7c2d4; stroke-width: 4; stroke-linecap: round; }
+.gg-papan { stroke: #8d9bb3; stroke-width: 3; stroke-linecap: round; }
+.gg-kabel { stroke: #8d9bb3; stroke-width: 1; stroke-dasharray: 2 1.5; }
+.gg-alat { fill: #e0861f; }
+.gg.jeda { opacity: .65; }
+.gambar-gerak figcaption { margin-top: 4px; font-size: .78rem; color: var(--abu); }
 .baris-tombol { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .baris-tombol.kanan { justify-content: flex-end; }
 .jarak-bawah { margin-bottom: 10px; }

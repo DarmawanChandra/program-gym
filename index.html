@@ -104,6 +104,18 @@
       <h2 class="judul-pertama">Catat berat badan</h2>
       <form id="form-berat" class="kotak" novalidate>
         <div class="dua-kolom">
+          <label>Umur (tahun)
+            <input type="text" inputmode="numeric" id="b-umur" placeholder="Contoh: 20" autocomplete="off">
+          </label>
+          <label>Jenis kelamin
+            <select id="b-kelamin">
+              <option value="">Pilih</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </label>
+        </div>
+        <div class="dua-kolom">
           <label>Tanggal
             <input type="date" id="b-tanggal">
           </label>
@@ -212,6 +224,7 @@
     </div>
   </dialog>
 
+  <script src="gambar.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
