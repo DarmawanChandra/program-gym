@@ -50,6 +50,19 @@
     <section id="tab-program" class="halaman">
       <p class="info">Atur gerakan untuk tiap hari. Semua perubahan langsung tersimpan di HP ini.</p>
       <div id="daftar-program"></div>
+
+      <!-- Cadangan data: simpan ke file / pulihkan dari file -->
+      <div class="kotak">
+        <h3>Cadangan data</h3>
+        <p class="info-kecil">Simpan semua catatan ke satu file. Pakai file itu kalau ganti HP atau datanya terhapus.</p>
+        <div class="baris-tombol">
+          <button type="button" class="btn utama" id="btn-simpan-cadangan">Simpan cadangan</button>
+          <label class="btn" for="file-cadangan" id="btn-pulihkan">Pulihkan dari file</label>
+        </div>
+        <input type="file" id="file-cadangan" class="tak-terlihat" accept=".json,application/json">
+        <p class="info-kecil" id="pesan-cadangan" hidden></p>
+      </div>
+
       <button type="button" class="btn bahaya penuh" id="btn-reset-program">Kembalikan ke program awal</button>
     </section>
 

@@ -100,6 +100,11 @@ input:focus, select:focus { outline: 2px solid var(--biru); border-color: var(--
 .btn.kecil { min-height: 38px; padding: 6px 12px; font-size: .9rem; }
 .btn.ikon { min-height: 38px; min-width: 42px; padding: 4px 0; font-size: 1.15rem; line-height: 1; }
 .btn.penuh { width: 100%; }
+label.btn, a.btn { display: inline-flex; align-items: center; justify-content: center; margin: 0; font-size: 1rem; color: var(--teks); text-decoration: none; }
+a.btn.kecil { font-size: .9rem; }
+/* Kotak pilih file tetap ada tapi tidak terlihat (dibuka lewat tombol label) */
+.tak-terlihat { position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; margin: 0; border: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+.btn.video { margin-top: 10px; color: var(--biru); border-color: var(--biru); font-weight: 600; }
 .baris-tombol { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .baris-tombol.kanan { justify-content: flex-end; }
 .jarak-bawah { margin-bottom: 10px; }

@@ -312,10 +312,15 @@ function dataBaru() {
 }
 
 function muatData() {
-  const awal = dataBaru();
   let d = null;
   try { d = JSON.parse(localStorage.getItem(KUNCI)); } catch (e) { d = null; }
-  if (!d || typeof d !== 'object') return awal;
+  if (!d || typeof d !== 'object') return dataBaru();
+  return rapikanData(d);
+}
+
+// Lengkapi data (dari HP atau dari file cadangan) supaya aplikasi tidak error
+function rapikanData(d) {
+  const awal = dataBaru();
   const hasil = {
     program: d.program && typeof d.program === 'object' ? d.program : awal.program,
     log: d.log && typeof d.log === 'object' ? d.log : {},
@@ -979,9 +984,23 @@ function tampilDetailTanggal() {
 /* ================================================================
    DAFTAR GERAKAN
    ================================================================ */
+// Kata pencarian video contoh di YouTube (beberapa gerakan pakai kata khusus)
+const CARI_VIDEO = {
+  'push-up lutut': 'cara knee push up yang benar',
+  'jalan santai': 'cara jalan kaki olahraga yang benar',
+  'kardio treadmill / sepeda': 'cara incline walk treadmill untuk pemula',
+  'stretching': 'stretching setelah gym untuk pemula',
+  'chest press mesin': 'cara chest press machine yang benar'
+};
+function linkVideo(p) {
+  const kata = CARI_VIDEO[kunciNama(p.nama)] || ('cara ' + p.nama + ' yang benar');
+  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kata);
+}
+
 function htmlCara(p) {
   return `<ol>${p.langkah.map(l => `<li>${esc(l)}</li>`).join('')}</ol>` +
-    (p.tips ? `<p class="tips"><b>Tips:</b> ${esc(p.tips)}</p>` : '');
+    (p.tips ? `<p class="tips"><b>Tips:</b> ${esc(p.tips)}</p>` : '') +
+    `<a class="btn kecil penuh video" href="${esc(linkVideo(p))}" target="_blank" rel="noopener">Lihat video contoh (butuh internet)</a>`;
 }
 
 function tampilGerakan() {
@@ -1099,6 +1118,75 @@ function tampilIdeal() {
   }
   html += '<p class="info-kecil">Patokan IMT dari Kemenkes RI. IMT tidak membedakan otot dan lemak.</p>';
   el.innerHTML = html;
+}
+
+/* ================================================================
+   CADANGAN DATA: simpan ke file dan pulihkan dari file
+   ================================================================ */
+function pesanCadangan(teks) {
+  const el = document.getElementById('pesan-cadangan');
+  el.textContent = teks;
+  el.hidden = !teks;
+}
+
+function isiFileCadangan() {
+  return JSON.stringify({ aplikasi: 'Program Gym', versi: 1, dibuat: new Date().toISOString(), data }, null, 2);
+}
+
+async function simpanCadangan() {
+  const isi = isiFileCadangan();
+  const nama = 'program-gym-cadangan-' + hariIni() + '.json';
+  // HP: pakai menu Bagikan (bisa Simpan ke File, Google Drive, atau WhatsApp)
+  try {
+    const file = new File([isi], nama, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Cadangan Program Gym' });
+      pesanCadangan('Cadangan sudah dibagikan. Simpan file ' + nama + ' di tempat aman.');
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // dibatalkan
+  }
+  // Laptop / browser lain: unduh file
+  const url = URL.createObjectURL(new Blob([isi], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nama;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  pesanCadangan('File ' + nama + ' sudah diunduh. Simpan di tempat aman.');
+}
+
+// Baca isi file cadangan. Hasilnya null kalau file tidak cocok.
+function bacaCadangan(teks) {
+  let isi;
+  try { isi = JSON.parse(teks); } catch (e) { return null; }
+  const d = isi && isi.data ? isi.data : isi;
+  if (!d || typeof d !== 'object' || !d.program || typeof d.program !== 'object') return null;
+  if (!HARI.some(h => d.program[h] && Array.isArray(d.program[h].latihan))) return null;
+  return rapikanData(d);
+}
+
+async function pulihkanDari(file) {
+  let teks = null;
+  try { teks = await file.text(); } catch (e) { teks = null; }
+  const baru = teks == null ? null : bacaCadangan(teks);
+  if (!baru) {
+    pesanCadangan('File ini bukan cadangan Program Gym.');
+    return;
+  }
+  const hariLatihan = Object.keys(baru.log).filter(t => {
+    const item = (baru.log[t] && baru.log[t].item) || {};
+    return Object.keys(item).some(id => (item[id].set || []).some(s => s && s.selesai));
+  }).length;
+  if (!confirm('Ganti semua data di HP ini dengan isi cadangan? Isinya ' + hariLatihan +
+    ' hari latihan dan ' + baru.berat.length + ' catatan berat badan.')) return;
+  data = baru;
+  simpan();
+  pesanCadangan('Data berhasil dipulihkan.');
+  tampilProgram();
 }
 
 /* ================================================================
@@ -1221,6 +1309,14 @@ function pasangTombol() {
     tampilProgram();
   });
 
+  // --- Cadangan data ---
+  document.getElementById('btn-simpan-cadangan').addEventListener('click', simpanCadangan);
+  const fileEl = document.getElementById('file-cadangan');
+  fileEl.addEventListener('change', () => {
+    const f = fileEl.files && fileEl.files[0];
+    if (f) pulihkanDari(f).finally(() => { fileEl.value = ''; });
+  });
+
   // --- Jendela tambah / ubah gerakan ---
   const dlgGerakan = document.getElementById('dlg-gerakan');
   document.getElementById('saran-gerakan').innerHTML = PUSTAKA.map(p => `<option value="${esc(p.nama)}"></option>`).join('');
@@ -1338,3 +1434,8 @@ function geserBulan(arah) {
 /* ---------- Mulai ---------- */
 pasangTombol();
 bukaTab('latihan');
+
+// Simpan file aplikasi di HP supaya tetap bisa dibuka tanpa internet (lihat sw.js)
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* tanpa mode offline: tidak apa-apa */ });
+}
