@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Supaya bisa dipasang di layar utama HP seperti aplikasi -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Program Gym">
+  <meta name="theme-color" content="#1f4fb5">
+  <title>Program Gym</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Bagian atas: judul menu yang sedang dibuka -->
+  <header class="atas">
+    <h1 id="judul-halaman">Latihan</h1>
+  </header>
+
+  <main>
+    <!-- ===== LATIHAN: centang set, catat beban, timer istirahat ===== -->
+    <section id="tab-latihan" class="halaman aktif">
+      <div class="kotak">
+        <div class="dua-kolom">
+          <label>Tanggal
+            <input type="date" id="l-tanggal">
+          </label>
+          <label>Program hari
+            <select id="l-hari"></select>
+          </label>
+        </div>
+        <button type="button" class="btn kecil jarak-bawah" id="btn-hari-ini" hidden>Kembali ke hari ini</button>
+        <div class="baris-istirahat">
+          <span>Istirahat</span>
+          <div class="pilihan" id="pilih-istirahat">
+            <button type="button" data-detik="60">60</button>
+            <button type="button" data-detik="75">75</button>
+            <button type="button" data-detik="90">90</button>
+          </div>
+          <span>detik</span>
+          <button type="button" class="btn kecil" id="btn-mulai-istirahat">Mulai timer</button>
+        </div>
+      </div>
+      <div id="ringkasan-latihan"></div>
+      <div id="daftar-latihan"></div>
+    </section>
+
+    <!-- ===== PROGRAM: atur gerakan tiap hari ===== -->
+    <section id="tab-program" class="halaman">
+      <p class="info">Atur gerakan untuk tiap hari. Semua perubahan langsung tersimpan di HP ini.</p>
+      <div id="daftar-program"></div>
+      <button type="button" class="btn bahaya penuh" id="btn-reset-program">Kembalikan ke program awal</button>
+    </section>
+
+    <!-- ===== GRAFIK: kemajuan beban ===== -->
+    <section id="tab-grafik" class="halaman">
+      <label id="g-label">Pilih gerakan
+        <select id="g-gerakan"></select>
+      </label>
+      <div id="isi-grafik"></div>
+    </section>
+
+    <!-- ===== KALENDER: hari latihan ===== -->
+    <section id="tab-kalender" class="halaman">
+      <div class="kepala-kalender">
+        <button type="button" class="btn ikon" id="k-sebelum" aria-label="Bulan sebelumnya">&lsaquo;</button>
+        <b id="k-judul"></b>
+        <button type="button" class="btn ikon" id="k-sesudah" aria-label="Bulan berikutnya">&rsaquo;</button>
+      </div>
+      <div id="k-grid" class="kalender"></div>
+      <div class="keterangan">
+        <span><i class="tanda-latihan"></i>Ada latihan</span>
+        <span><i class="tanda-hari-ini"></i>Hari ini</span>
+      </div>
+      <p id="k-jumlah" class="jumlah-bulan"></p>
+      <div id="k-detail"></div>
+    </section>
+
+    <!-- ===== GERAKAN: cara melakukan tiap gerakan ===== -->
+    <section id="tab-gerakan" class="halaman">
+      <label>Cari gerakan
+        <input type="search" id="c-gerakan" placeholder="Contoh: squat atau bokong" autocomplete="off">
+      </label>
+      <p class="info-kecil">Tap nama gerakan untuk melihat caranya.</p>
+      <div id="daftar-gerakan"></div>
+    </section>
+
+    <!-- ===== BADAN: berat badan dan berat ideal ===== -->
+    <section id="tab-badan" class="halaman">
+      <h2 class="judul-pertama">Catat berat badan</h2>
+      <form id="form-berat" class="kotak" novalidate>
+        <div class="dua-kolom">
+          <label>Tanggal
+            <input type="date" id="b-tanggal">
+          </label>
+          <label>Berat (kg)
+            <input type="text" inputmode="decimal" id="b-kg" placeholder="Contoh: 85" autocomplete="off">
+          </label>
+        </div>
+        <p class="pesan" id="b-pesan"></p>
+        <button type="submit" class="btn utama penuh">Simpan berat</button>
+      </form>
+      <div id="isi-berat"></div>
+
+      <h2>Berat badan ideal</h2>
+      <div class="kotak">
+        <label>Tinggi badan (cm)
+          <input type="text" inputmode="decimal" id="i-tinggi" placeholder="Contoh: 170" autocomplete="off">
+        </label>
+        <div id="isi-ideal"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Timer istirahat: muncul setelah satu set dicentang -->
+  <div id="timer" class="timer" hidden>
+    <div class="timer-atas">
+      <span id="timer-label">Istirahat</span>
+      <b id="timer-angka">0:00</b>
+    </div>
+    <div class="batang"><div class="isi" id="timer-isi"></div></div>
+    <div class="timer-tombol">
+      <button type="button" data-timer="-15">-15 detik</button>
+      <button type="button" data-timer="15">+15 detik</button>
+      <button type="button" data-timer="lewati">Lewati</button>
+    </div>
+  </div>
+
+  <!-- Menu bawah -->
+  <nav class="menu-bawah" aria-label="Menu">
+    <button type="button" data-tab="latihan" class="aktif">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M3 10v4M18 7v10M21 10v4M6 12h12"/></svg>
+      <span>Latihan</span>
+    </button>
+    <button type="button" data-tab="program">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      <span>Program</span>
+    </button>
+    <button type="button" data-tab="grafik">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+      <span>Grafik</span>
+    </button>
+    <button type="button" data-tab="kalender">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <span>Kalender</span>
+    </button>
+    <button type="button" data-tab="gerakan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v14"/></svg>
+      <span>Gerakan</span>
+    </button>
+    <button type="button" data-tab="badan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7.5 11a4.5 4.5 0 0 1 9 0zM12 11l1.8-2.6"/></svg>
+      <span>Badan</span>
+    </button>
+  </nav>
+
+  <!-- Jendela tambah / ubah gerakan -->
+  <dialog id="dlg-gerakan">
+    <form id="form-gerakan" class="isi-dialog" novalidate>
+      <h3 id="dlg-judul">Tambah gerakan</h3>
+      <label>Nama gerakan
+        <input type="text" id="f-nama" list="saran-gerakan" autocomplete="off" placeholder="Contoh: Leg press">
+      </label>
+      <datalist id="saran-gerakan"></datalist>
+      <div class="tiga-kolom">
+        <label>Set
+          <input type="text" inputmode="numeric" id="f-set">
+        </label>
+        <label>Target
+          <input type="text" inputmode="numeric" id="f-target">
+        </label>
+        <label>Satuan
+          <select id="f-satuan">
+            <option value="rep">rep</option>
+            <option value="rep/kaki">rep/kaki</option>
+            <option value="rep/tangan">rep/tangan</option>
+            <option value="detik">detik</option>
+            <option value="menit">menit</option>
+          </select>
+        </label>
+      </div>
+      <p class="pesan" id="f-pesan"></p>
+      <div class="baris-tombol kanan">
+        <button type="button" class="btn" id="f-batal">Batal</button>
+        <button type="submit" class="btn utama">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Jendela cara melakukan gerakan -->
+  <dialog id="dlg-cara">
+    <div class="isi-dialog">
+      <h3 id="cara-judul"></h3>
+      <div id="cara-isi"></div>
+      <div class="baris-tombol kanan">
+        <button type="button" class="btn utama" id="cara-tutup">Tutup</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
