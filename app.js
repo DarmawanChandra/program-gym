@@ -817,7 +817,8 @@ function langkahRapi(jarak, jumlah) {
   return rapi * pangkat;
 }
 
-// Gambar grafik garis. titik = [{ label, nilai }]
+// Gambar grafik garis. titik = [{ label, nilai, tanggal }]
+// Kalau ada tanggal, jarak antar titik mengikuti jarak hari.
 function grafikGaris(titik, satuan) {
   const L = 340, T = 210, kiri = 44, kanan = 18, atas = 16, bawah = 34;
   const nilai = titik.map(t => t.nilai);
@@ -830,7 +831,10 @@ function grafikGaris(titik, satuan) {
   if (max - min < step / 2) { min -= step; max += step; }
   const lebar = L - kiri - kanan;
   const tinggi = T - atas - bawah;
-  const x = i => (titik.length === 1 ? kiri + lebar / 2 : kiri + i * lebar / (titik.length - 1));
+  const pakaiTanggal = titik.every(t => t.tanggal);
+  const hariKe = i => (pakaiTanggal ? Math.round(dariTeksTanggal(titik[i].tanggal).getTime() / 86400000) : i);
+  const rentang = hariKe(titik.length - 1) - hariKe(0);
+  const x = i => (rentang <= 0 ? kiri + lebar / 2 : kiri + (hariKe(i) - hariKe(0)) * lebar / rentang);
   const y = v => atas + (max - v) * tinggi / (max - min);
 
   let bantu = '';
@@ -844,8 +848,19 @@ function grafikGaris(titik, satuan) {
   const poin = titik.map((t, i) => x(i).toFixed(1) + ',' + y(t.nilai).toFixed(1)).join(' ');
   const bulatan = titik.map((t, i) =>
     `<circle class="g-titik" cx="${x(i).toFixed(1)}" cy="${y(t.nilai).toFixed(1)}" r="4"><title>${esc(t.label)}: ${tulisAngka(t.nilai, 2)} ${satuan}</title></circle>`).join('');
+  // Label tanggal: awal, akhir, dan satu di tengah kalau tidak bertabrakan
   const terakhir = titik.length - 1;
-  const urutLabel = titik.length <= 3 ? titik.map((_, i) => i) : [0, Math.floor(terakhir / 2), terakhir];
+  const urutLabel = [0];
+  if (terakhir > 0) {
+    let iTengah = -1;
+    let jarakTerdekat = Infinity;
+    for (let i = 1; i < terakhir; i++) {
+      const d = Math.abs(x(i) - (kiri + lebar / 2));
+      if (d < jarakTerdekat) { jarakTerdekat = d; iTengah = i; }
+    }
+    if (iTengah > 0 && x(iTengah) - x(0) >= 70 && x(terakhir) - x(iTengah) >= 70) urutLabel.push(iTengah);
+    urutLabel.push(terakhir);
+  }
   const label = urutLabel.map(i => {
     const posisi = titik.length === 1 ? 'middle' : i === 0 ? 'start' : i === terakhir ? 'end' : 'middle';
     return `<text class="g-angka" x="${x(i).toFixed(1)}" y="${T - 10}" text-anchor="${posisi}">${esc(titik[i].label)}</text>`;
@@ -884,7 +899,7 @@ function tampilGrafik() {
       <div class="angka"><span>Rekor</span><b>${tulisAngka(rekor.kg, 2)} kg</b><small>${tanggalPendek(rekor.tanggal)}</small></div>
     </div>
     ${titik.length > 1
-      ? grafikGaris(titik.map(t => ({ label: tanggalPendek(t.tanggal), nilai: t.kg })), 'kg')
+      ? grafikGaris(titik.map(t => ({ label: tanggalPendek(t.tanggal), nilai: t.kg, tanggal: t.tanggal })), 'kg')
       : '<p class="info-kecil">Garis grafik muncul setelah ada catatan di 2 hari berbeda.</p>'}
     <h3>Riwayat beban terberat</h3>
     <table class="tabel-riwayat">
@@ -1015,7 +1030,7 @@ function tampilBadan() {
         ${daftar.length > 1 ? `<div class="angka"><span>Perubahan</span><b>${teksSelisih}</b><small>sejak ${tanggalPendek(awal.tanggal)}</small></div>` : ''}
       </div>
       ${daftar.length > 1
-        ? grafikGaris(daftar.map(b => ({ label: tanggalPendek(b.tanggal), nilai: b.kg })), 'kg')
+        ? grafikGaris(daftar.map(b => ({ label: tanggalPendek(b.tanggal), nilai: b.kg, tanggal: b.tanggal })), 'kg')
         : '<p class="info-kecil">Grafik muncul setelah ada 2 catatan.</p>'}
       <details class="riwayat">
         <summary>Riwayat berat badan (${daftar.length} catatan)</summary>
